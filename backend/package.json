@@ -10,8 +10,8 @@
     "start": "node dist/index.js",
     "typeorm": "typeorm-ts-node-commonjs",
     "migration:run": "npx tsx node_modules/typeorm/cli.js migration:run -d src/shared/infrastructure/persistence/data-source.ts",
-  "migration:revert": "npx tsx node_modules/typeorm/cli.js migration:revert -d src/shared/infrastructure/persistence/data-source.ts",
-  "migration:generate": "npx tsx node_modules/typeorm/cli.js migration:generate -d src/shared/infrastructure/persistence/data-source.ts"
+    "migration:revert": "npx tsx node_modules/typeorm/cli.js migration:revert -d src/shared/infrastructure/persistence/data-source.ts",
+    "migration:generate": "npx tsx node_modules/typeorm/cli.js migration:generate -d src/shared/infrastructure/persistence/data-source.ts"
   },
   "keywords": [],
   "author": "",

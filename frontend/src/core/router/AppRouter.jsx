@@ -3,9 +3,10 @@ import { RoleGuard } from "./RoleGuard";
 import { LoginForm } from "../../features/auth/components/LoginForm";
 import { UserManagementTable } from "../../features/admin/components/UserManagementTable";
 
-const TempAdminUsersPage = () => <h2>Panel de Gestión de Usuarios (Admin)</h2>;
-const TempTeacherPage = () => <h2>Panel de Docente</h2>;
-const TempStudentPage = () => <h2>Panel de Estudiante</h2>;
+// Importación de las páginas de Dashboard creadas
+import { TeacherDashboard } from "../../features/teacher/pages/TeacherDashboard";
+import { StudentDashboard } from "../../features/student/pages/StudentDashboard";
+
 const TempUnauthorizedPage = () => (
   <h2>403 — No tienes acceso a esta sección</h2>
 );
@@ -25,12 +26,12 @@ export const AppRouter = () => {
 
         {/* Rutas Protegidas de Docente */}
         <Route element={<RoleGuard allowedRoles={["TEACHER"]} />}>
-          <Route path="/teacher/dashboard" element={<TempTeacherPage />} />
+          <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
         </Route>
 
         {/* Rutas Protegidas de Estudiante */}
         <Route element={<RoleGuard allowedRoles={["STUDENT"]} />}>
-          <Route path="/student/dashboard" element={<TempStudentPage />} />
+          <Route path="/student/dashboard" element={<StudentDashboard />} />
         </Route>
 
         {/* Redirección global por defecto */}

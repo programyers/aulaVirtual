@@ -51,3 +51,30 @@ Se estableció la conexión de datos reales para la administración de usuarios.
 3. **`adminService`** realiza `GET /users` mediante `apiClient` adjuntando el JWT en la cabecera `Authorization`.
 4. **Backend Express** valida JWT + Rol `ADMIN` ➔ delega a `UserController` ➔ ejecuta `GetUsersUseCase` ➔ consulta `TypeOrmUserRepository` (PostgreSQL).
 5. **Frontend** recibe `200 OK` con el payload de usuarios y actualiza el estado local, poblando automáticamente la tabla en la interfaz gráfica.
+
+## 05/10/2026 — Implementación de la Feature 'Subjects' e Inscripciones (Backend a Frontend)
+
+### 1. Arquitectura del Módulo (`src/features/subjects/`)
+
+Se desarrolló la rebanada vertical (_Vertical Slice_) para el módulo de Asignaturas e Inscripciones respetando el patrón **Feature-Driven Architecture**[cite: 1, 2, 8]:
+
+- **Capa de Red (`src/features/subjects/services/subject.service.js`):** Abstracción de consumo HTTP sobre `apiClient` para consumir los endpoints `/subjects/teacher`, `/subjects`, `/subjects/student` y `/subjects/enroll`[cite: 1].
+- **Capa de Lógica y Estado (`src/features/subjects/hooks/`):**
+  - `useTeacherSubjects.js`: Hook para consultar las asignaturas impartidas y gestionar la actualización reactiva del estado tras la creación de una nueva asignatura[cite: 1].
+  - `useStudentSubjects.js`: Hook para consultar las materias matriculadas e incorporar inmediatamente asignaturas inscritas mediante código único[cite: 1].
+- **Capa de UI (`src/features/subjects/components/`):**
+  - **Docente:** `CreateSubjectModal.jsx` (modal de registro de materia), `TeacherSubjectCard.jsx` (tarjeta con código de acceso de 6 caracteres y copiado al portapapeles) y `TeacherSubjectList.jsx`[cite: 1].
+  - **Estudiante:** `EnrollSubjectModal.jsx` (modal para ingreso del código), `StudentSubjectCard.jsx` (tarjeta del curso matriculado e información del docente) y `StudentSubjectList.jsx`[cite: 1].
+
+### 2. Integración en Dashboards y Enrutador
+
+- **Sustitución de Vistas Temporales (`src/core/router/AppRouter.jsx`):** Se reemplazaron los componentes comodín (`TempTeacherPage`, `TempStudentPage`) vinculando `TeacherDashboard.jsx` y `StudentDashboard.jsx` a las rutas protegidas `/teacher/dashboard` y `/student/dashboard` bajo el control de `RoleGuard`[cite: 1, 2, 8].
+- **Depuración en `admin.service.js`:** Se corrigió la ruta de actualización de estado de usuario a `PATCH /users/:id/status`, permitiendo aprobar cuentas docentes desde la interfaz de administración[cite: 1, 8].
+
+### 3. Trazabilidad del Flujo Vertical (End-to-End)
+
+1. **Docente:** Creación de asignatura desde el panel (`/teacher/dashboard`) ➔ generación del código aleatorio único en el backend Express/TypeORM (ej. `DCABLO`) ➔ almacenamiento en PostgreSQL[cite: 1].
+2. **Estudiante:** Ingreso del código único desde el panel (`/student/dashboard`) ➔ creación del registro en la tabla `enrollments` del backend ➔ renderizado automático de la asignatura matriculada en la SPA[cite: 1].
+
+### 4. Estrategia de Maquetación Estructural
+- **Postergación de Estilos (Radix UI):** Se optó de forma deliberada por mantener la maquetación en HTML/JSX estructural nativo[cite: 7], asegurando la correcta validación funcional del flujo sin incurrir en refactorizaciones de clases CSS previas a la integración de la librería de componentes *headless* **Radix UI**.
