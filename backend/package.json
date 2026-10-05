@@ -1,0 +1,43 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typeorm": "typeorm-ts-node-commonjs",
+    "migration:run": "npx tsx node_modules/typeorm/cli.js migration:run -d src/shared/infrastructure/persistence/data-source.ts",
+  "migration:revert": "npx tsx node_modules/typeorm/cli.js migration:revert -d src/shared/infrastructure/persistence/data-source.ts",
+  "migration:generate": "npx tsx node_modules/typeorm/cli.js migration:generate -d src/shared/infrastructure/persistence/data-source.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1144.0",
+    "bcrypt": "^6.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "ioredis": "^5.11.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.6.3",
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
