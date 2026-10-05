@@ -16,10 +16,8 @@ export const adminService = {
    * @returns {Promise<AdminUser[]>}
    */
   getUsers: async () => {
-    // Si en tu backend la ruta fue registrada con prefijo admin, usa "/admin/users"
     const response = await apiClient.get("/users");
 
-    // Desempaquetamos considerando la estructura { message, data } que usa tu API
     const users =
       response.data?.data?.users ||
       response.data?.data ||
@@ -42,7 +40,8 @@ export const adminService = {
    * @returns {Promise<AdminUser>}
    */
   updateUserStatus: async (userId, status) => {
-    const response = await apiClient.patch(`/admin/users/${userId}/status`, {
+    // Correcto: se elimina el prefijo '/admin' extra para coincidir con Express
+    const response = await apiClient.patch(`/users/${userId}/status`, {
       status,
     });
     return response.data?.data || response.data;
