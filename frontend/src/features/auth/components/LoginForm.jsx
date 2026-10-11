@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLogin } from "../hooks/useLogin";
+//utilizar fragmens
 
 export const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -14,6 +15,7 @@ export const LoginForm = () => {
   return (
     <div
       style={{
+        // mala practica en los estilos
         maxWidth: "400px",
         margin: "50px auto",
         padding: "2rem",
@@ -24,6 +26,7 @@ export const LoginForm = () => {
     >
       <h2
         style={{
+          // mala practica en los estilos
           textAlign: "center",
           marginBottom: "1.5rem",
           color: "#1f2937",
@@ -35,6 +38,7 @@ export const LoginForm = () => {
       {error && (
         <div
           style={{
+            // mala practica en los estilos
             backgroundColor: "#fee2e2",
             color: "#991b1b",
             padding: "0.75rem",
@@ -54,6 +58,7 @@ export const LoginForm = () => {
         <div>
           <label
             style={{
+              // mala practica en los estilos
               display: "block",
               marginBottom: "0.5rem",
               fontSize: "0.875rem",

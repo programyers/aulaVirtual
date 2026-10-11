@@ -1,224 +1,210 @@
-# Aula Virtual — Plataforma de Gestión de Aprendizaje (LMS)
+# Aula Virtual — Frontend (React + Vite)
 
-Plataforma web educativa orientada a la gestión de asignaturas, estructuración flexible de contenidos por módulos, entrega y calificación de actividades, y almacenamiento seguro de recursos. Diseñada bajo principios de **Arquitectura Hexagonal (DDD)** en el backend y **Feature-Driven Architecture** en el frontend.
+SPA del **Aula Virtual**, construida con React + Vite y una **Feature-Driven Architecture**. Consume la API REST del backend (Node.js + Express + TypeScript, Arquitectura Hexagonal) bajo el prefijo `/api/v1`.
+
+> Este repositorio es el cliente web del proyecto **Aula Virtual**. Visión general: [README general](https://github.com/TU_USUARIO/aula-virtual) · API: [aula-virtual-backend](https://github.com/TU_USUARIO/aula-virtual-backend).
+
+## Contenido
+
+1. [Stack tecnológico](#1-stack-tecnológico)
+2. [Arquitectura](#2-arquitectura)
+3. [Estructura del proyecto](#3-estructura-del-proyecto)
+4. [Capa de red y seguridad HTTP](#4-capa-de-red-y-seguridad-http)
+5. [Autenticación y control de acceso](#5-autenticación-y-control-de-acceso)
+6. [Features implementadas](#6-features-implementadas)
+7. [Puesta en marcha](#7-puesta-en-marcha)
+8. [Decisiones de diseño](#8-decisiones-de-diseño)
+9. [Estado del proyecto](#9-estado-del-proyecto)
 
 ---
 
-## 1. Módulos del Sistema y Arquitectura de Software
+## 1. Stack tecnológico
 
-El proyecto se estructura en capas desacopladas donde cada módulo del backend expone contratos REST consumidos por características independientes en el frontend.
+| Área                             | Tecnología                                                                        |
+| -------------------------------- | --------------------------------------------------------------------------------- |
+| UI                               | React                                                                             |
+| Bundler / servidor de desarrollo | Vite                                                                              |
+| Lenguaje                         | JavaScript (JSX)                                                                  |
+| Enrutamiento                     | React Router DOM                                                                  |
+| Cliente HTTP                     | Axios (con interceptores)                                                         |
+| Estado global                    | Zustand                                                                           |
+| Estilos (planificado)            | shadcn/ui + Radix UI + Tailwind CSS, a aplicar una vez probados todos los módulos |
 
-### Frontend (React + Vite)
+---
+
+## 2. Arquitectura
+
+El código se organiza por **features** (dominios de negocio aislados) y se desarrolla mediante **rebanadas verticales** (_Vertical Slices_): cada feature incluye su UI, su lógica y su acceso a red. Esto mantiene simetría con la Arquitectura Hexagonal del backend y permite escalar el sistema de forma modular.
+
+Cada feature se divide en tres capas:
+
+| Capa             | Carpeta       | Responsabilidad                                 |
+| ---------------- | ------------- | ----------------------------------------------- |
+| UI               | `components/` | Componentes de presentación                     |
+| Estado y lógica  | `hooks/`      | Hooks personalizados (carga, errores, acciones) |
+| Servicios de red | `services/`   | Llamadas al backend sobre `apiClient`           |
+
+Correspondencia con el backend: el dominio `modules/users` del backend se integra en el frontend dentro de `features/admin/`.
+
+---
+
+## 3. Estructura del proyecto
+
 ```text
 src/
-├── core/                  # Interceptores Axios/Fetch, React Router DOM, Zustand global
-├── features/              # Módulos de dominio aislados
-│   ├── auth/              # Formularios de Login, Registro y guards de rutas
-│   ├── admin/             # Panel de aprobación de docentes y gestión de usuarios
-│   ├── subjects/          # Listado, creación e inscripción por código
-│   ├── sections/          # Constructor y visor de módulos/niveles dinámicos
-│   ├── assignments/       # Creación de tareas, entregas de estudiantes y panel de calificación
-│   └── notifications/     # Campana de avisos en tiempo real e historial
-└── shared/                # Componentes UI reutilizables (Modales, Subidores de archivos, Tablas)
-```
-
-### Backend (Node.js / NestJS — Arquitectura Hexagonal)
-```text
-src/
-├── modules/
-│   ├── auth/              # Login, Refresh Tokens rotativos y hashing de contraseñas
-│   ├── users/             # Aprobación de cuentas docentes y control de estado
-│   ├── subjects/          # Gestión de asignaturas y códigos de inscripción
-│   ├── sections/          # Secciones flexibles (CONTENT, LIBRARY, ASSIGNMENT)
-│   ├── resources/         # Gestión de archivos mediante URLs firmadas S3/MinIO
-│   ├── assignments/       # Lógica de tareas, límites de entregas y evaluaciones
-│   └── notifications/     # Procesamiento asíncrono con Redis y colas
-└── shared/                # Filtros globales de excepción, middlewares y logger JSON
-```
-
----
-
-## 2. Diagrama de Flujo Técnico e Infraestructura
-
-```text
-                       ┌─────────────────────────┐
-                       │   React Frontend (SPA)  │
-                       └────────────┬────────────┘
-                                    │ HTTP / JWT
-                                    ▼
-                       ┌─────────────────────────┐
-                       │   Backend REST API      │
-                       └──────┬─────┬─────┬──────┘
-                              │     │     │
-            ┌─────────────────┘     │     └─────────────────┐
-            ▼                       ▼                       ▼
-   ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-   │   PostgreSQL    │     │   MinIO (S3)    │     │   Redis Queue   │
-   │   (Persistencia)│     │ (Almacenamiento)│     │ (Notificaciones)│
-   └─────────────────┘     └─────────────────┘     └─────────────────┘
+├── core/                       # Módulos transversales
+│   ├── api/
+│   │   └── axios.config.js     # apiClient + interceptores
+│   ├── store/
+│   │   └── authStore.js        # Sesión (Zustand)
+│   └── router/
+│       ├── AppRouter.jsx       # Enrutador central
+│       └── RoleGuard.jsx       # Guardia de rutas por autenticación, estado y rol
+├── features/                   # Dominios de negocio aislados
+│   ├── auth/                   # Login y acceso (guards en core/router)
+│   ├── admin/                  # Gestión de usuarios y aprobación de docentes
+│   │   ├── components/         # UserManagementTable.jsx
+│   │   ├── hooks/              # useAdminUsers.js
+│   │   └── services/           # admin.service.js
+│   ├── subjects/               # Asignaturas e inscripción por código
+│   │   ├── components/         # Modales, tarjetas y listas (docente / estudiante)
+│   │   ├── hooks/              # useTeacherSubjects.js, useStudentSubjects.js
+│   │   └── services/           # subject.service.js
+│   ├── sections/               # (pendiente) Constructor y visor de secciones
+│   ├── assignments/            # (pendiente) Tareas, entregas y calificación
+│   └── notifications/          # (pendiente) Avisos e historial
+└── shared/                     # Componentes UI y utilidades reutilizables
 ```
 
 ---
 
-## 3. Modelo de Datos y Esquema Relacional (PostgreSQL)
+## 4. Capa de red y seguridad HTTP
 
-El sistema utiliza UUIDv4 como clave primaria en todas las tablas y desabilita la sincronización automática en favor de migraciones versionadas.
+El cliente HTTP vive en `src/core/api/axios.config.js` y es reutilizable en todas las features.
 
-```sql
--- Tabla de Usuarios
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('ADMIN', 'TEACHER', 'STUDENT')),
-    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'PENDING_APPROVAL', 'DISABLED')),
-    token_version INT DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+- **URL base:** se lee de `import.meta.env.VITE_API_URL`, sin URLs fijas en el código (_hardcoding_). El `apiClient` apunta a la base `/api/v1`, por lo que los servicios usan rutas relativas (por ejemplo `apiClient.get('/users')`).
+- **Interceptor de peticiones:** inyecta automáticamente `Authorization: Bearer <token>` cuando existe sesión activa en `localStorage`.
+- **Interceptor de respuestas:** captura de forma centralizada los errores `401 Unauthorized`, limpia el almacenamiento local y redirige a `/login`.
+- **Formato de respuesta:** los servicios extraen los datos de la estructura estandarizada del API `{ message, data }` mediante `response.data.data`.
 
--- Tabla de Asignaturas
-CREATE TABLE subjects (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    teacher_id UUID NOT NULL REFERENCES users(id),
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    code VARCHAR(20) UNIQUE NOT NULL,
-    is_archived BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+---
 
--- Tabla de Inscripciones de Estudiantes
-CREATE TABLE enrollments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    student_id UUID NOT NULL REFERENCES users(id),
-    subject_id UUID NOT NULL REFERENCES subjects(id),
-    status VARCHAR(20) DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'DROPPED')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_student_subject UNIQUE (student_id, subject_id)
-);
+## 5. Autenticación y control de acceso
 
--- Tabla de Secciones / Módulos Flexibles
-CREATE TABLE sections (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    subject_id UUID NOT NULL REFERENCES subjects(id),
-    title VARCHAR(255) NOT NULL,
-    type VARCHAR(20) NOT NULL CHECK (type IN ('CONTENT', 'LIBRARY', 'ASSIGNMENT')),
-    position INT NOT NULL DEFAULT 1,
-    is_published BOOLEAN DEFAULT FALSE,
-    deleted_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+### Estado de sesión (`authStore`)
 
--- Tabla de Recursos de Archivo
-CREATE TABLE resources (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    section_id UUID NOT NULL REFERENCES sections(id),
-    file_key VARCHAR(255) NOT NULL,
-    original_name VARCHAR(255) NOT NULL,
-    mime_type VARCHAR(100) NOT NULL,
-    file_size INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+Tienda Zustand con `user`, `token` e `isAuthenticated`, sincronizada en tiempo real con `localStorage`. Al iniciar sesión guarda los datos que devuelve `POST /auth/login` (`id`, `email`, `fullName`, `role`, `status`).
 
--- Tabla de Tareas
-CREATE TABLE assignments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    section_id UUID NOT NULL REFERENCES sections(id),
-    title VARCHAR(255) NOT NULL,
-    instructions TEXT,
-    due_at TIMESTAMP NOT NULL,
-    max_score DECIMAL(5, 2) NOT NULL DEFAULT 5.00,
-    allow_late BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+### Guardia de rutas (`RoleGuard`)
 
--- Tabla de Entregas de Estudiantes
-CREATE TABLE submissions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    assignment_id UUID NOT NULL REFERENCES assignments(id),
-    student_id UUID NOT NULL REFERENCES users(id),
-    text_content TEXT,
-    score DECIMAL(5, 2) NULL,
-    feedback TEXT NULL,
-    status VARCHAR(20) DEFAULT 'SUBMITTED' CHECK (status IN ('SUBMITTED', 'RETURNED', 'GRADED')),
-    is_late BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_assignment_student UNIQUE (assignment_id, student_id)
-);
+Valida tres capas antes de renderizar una vista:
 
--- Tabla de Notificaciones
-CREATE TABLE notifications (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id),
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    is_read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+1. Autenticación activa.
+2. Estado de la cuenta (`PENDING_APPROVAL` para docentes en revisión).
+3. Rol del usuario (`ADMIN`, `TEACHER`, `STUDENT`).
 
--- Índices de Rendimiento
-CREATE INDEX idx_subjects_teacher ON subjects(teacher_id);
-CREATE INDEX idx_sections_subject ON sections(subject_id);
-CREATE INDEX idx_resources_section ON resources(section_id);
-CREATE INDEX idx_assignments_section ON assignments(section_id);
-CREATE INDEX idx_submissions_assignment ON submissions(assignment_id);
-CREATE INDEX idx_notifications_user ON notifications(user_id, is_read);
+### Enrutador (`AppRouter`)
+
+| Ruta                    | Acceso                      | Vista                 |
+| ----------------------- | --------------------------- | --------------------- |
+| `/login`                | Pública                     | Inicio de sesión      |
+| `/403`                  | Pública                     | Acceso denegado       |
+| `/teacher/dashboard`    | `TEACHER` (vía `RoleGuard`) | `TeacherDashboard`    |
+| `/student/dashboard`    | `STUDENT` (vía `RoleGuard`) | `StudentDashboard`    |
+| Panel de administración | `ADMIN` (vía `RoleGuard`)   | Gestión de usuarios   |
+| `*`                     | —                           | Redirección (comodín) |
+
+---
+
+## 6. Features implementadas
+
+### Admin (`src/features/admin/`)
+
+Gestión de usuarios y aprobación de cuentas docentes.
+
+**Flujo de datos (rebanada vertical completa):**
+
+1. `UserManagementTable` ejecuta `useEffect` al montarse.
+2. `useAdminUsers` invoca `adminService.getUsers()` (expone `isLoading`, `error`, `users`, `refetch` y `changeUserStatus`).
+3. `adminService` realiza `GET /users` mediante `apiClient`, adjuntando el JWT.
+4. El backend valida JWT + rol `ADMIN` y responde con los usuarios.
+5. El frontend actualiza el estado local y puebla la tabla.
+
+### Subjects (`src/features/subjects/`)
+
+Asignaturas e inscripciones.
+
+- **Docente:** crea asignaturas con `CreateSubjectModal`; cada `TeacherSubjectCard` muestra el código de acceso de 6 caracteres con copiado al portapapeles.
+- **Estudiante:** se inscribe con `EnrollSubjectModal` ingresando el código; `StudentSubjectCard` muestra el curso y la información del docente.
+- Los hooks `useTeacherSubjects` y `useStudentSubjects` actualizan el estado de forma reactiva tras crear o inscribir.
+
+### Endpoints consumidos
+
+| Feature               | Método     | Endpoint (relativo a `/api/v1`)          |
+| --------------------- | ---------- | ---------------------------------------- |
+| Auth                  | POST       | `/auth/login`                            |
+| Admin                 | GET        | `/users`                                 |
+| Admin                 | PATCH      | `/users/:id/status`                      |
+| Subjects (docente)    | POST / GET | `/subjects` · `/subjects/teacher`        |
+| Subjects (estudiante) | POST / GET | `/subjects/enroll` · `/subjects/student` |
+
+---
+
+## 7. Puesta en marcha
+
+### Requisitos
+
+- Node.js 20+
+- API del backend en ejecución (ver el [repositorio del backend](https://github.com/TU_USUARIO/aula-virtual-backend))
+
+### Pasos
+
+```bash
+cp .env.example .env
+npm install
+npm run dev
 ```
 
----
+La aplicación queda disponible en `http://localhost:5173`.
 
-## 4. Despliegue Local con Docker Compose
+### Variables de entorno
 
-Toda la infraestructura local (PostgreSQL, MinIO, Redis y servicios de aplicación) se ejecuta de forma orquestada.
+```env
+VITE_API_URL=http://localhost:3000/api/v1
+```
 
-### Requisitos Previos
-* Docker Engine v24+
-* Docker Compose v2+
+### Scripts
 
-### Pasos de Ejecución
-
-1. **Clonar el repositorio y configurar variables de entorno:**
-   ```bash
-   git clone [https://github.com/usuario/aula-virtual.git](https://github.com/usuario/aula-virtual.git)
-   cd aula-virtual
-   cp .env.example .env
-   ```
-
-2. **Levantar el entorno completo:**
-   ```bash
-   docker compose up --build -d
-   ```
-
-3. **Verificar estado de los servicios:**
-   ```bash
-   docker compose ps
-   ```
-
-### Puertos de Servicios Locales
-* **Frontend Web:** `http://localhost:5173`
-* **API REST Backend:** `http://localhost:3000/api/v1`
-* **Swagger Docs:** `http://localhost:3000/api/docs`
-* **MinIO Console:** `http://localhost:9001` (Credenciales en `.env`)
-* **PostgreSQL:** `localhost:5432`
+| Script            | Descripción                    |
+| ----------------- | ------------------------------ |
+| `npm run dev`     | Servidor de desarrollo de Vite |
+| `npm run build`   | Compilación para producción    |
+| `npm run preview` | Vista previa de la compilación |
 
 ---
 
-## 5. Estrategia de Migraciones de Base de Datos
+## 8. Decisiones de diseño
 
-Las modificaciones al esquema de base de datos se gestionan exclusivamente mediante archivos de migración versionados ubicados en `backend/src/infrastructure/persistence/migrations`.
+- **Feature-Driven + Vertical Slices:** simetría con el backend hexagonal y modularidad para escalar.
+- **Zustand para la sesión:** estado liviano, sin la complejidad de Redux ni la sobrecarga de re-renders de React Context.
+- **Axios con interceptores y `VITE_API_URL`:** el token se adjunta solo, los `401` se manejan en un único lugar y no hay URLs fijas en el código.
+- **Seguridad por diseño:** `RoleGuard` impide que usuarios no autorizados vean vistas restringidas.
+- **Maquetación estructural primero:** se mantiene JSX/HTML nativo para validar el flujo funcional sin refactorizar clases CSS; shadcn/ui (Radix UI + Tailwind CSS) se aplicará cuando todos los módulos estén probados.
+- **Desarrollo módulo a módulo:** cada módulo se construye primero en el backend y luego se conecta en el frontend.
 
-* **Crear nueva migración:**
-  ```bash
-  npm run migration:create --name=AñadirTablaQuizzes
-  ```
-* **Ejecutar migraciones manualmente:**
-  ```bash
-  npm run migration:run
-  ```
-* **Revertir última migración:**
-  ```bash
-  npm run migration:revert
-  ```
+---
 
-> **Nota de despliegue:** Al ejecutar `docker compose up`, el servicio `api` invoca automáticamente `npm run migration:run` una vez confirmada la disponibilidad de PostgreSQL mediante el *healthcheck*.
+## 9. Estado del proyecto
+
+| Componente                                                                | Estado                 |
+| ------------------------------------------------------------------------- | ---------------------- |
+| Core: cliente Axios, interceptores, `authStore`, `RoleGuard`, `AppRouter` | Listo                  |
+| Auth: login (`/login`)                                                    | Listo                  |
+| Admin: gestión de usuarios y aprobación de docentes                       | Listo (maquetado base) |
+| Subjects: asignaturas e inscripción por código                            | Listo (maquetado base) |
+| Estilos con shadcn/ui + Radix UI + Tailwind CSS                           | Pendiente              |
+| Sections, Assignments, Notifications                                      | Pendiente              |
+
+## Documentación adicional
+
+- [Bitácora de desarrollo del frontend](docs/BITACORA.md)

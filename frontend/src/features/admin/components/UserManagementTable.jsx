@@ -1,4 +1,5 @@
 import { useAdminUsers } from "../hooks/useAdminUsers";
+//utilizar fragmens
 
 export const UserManagementTable = () => {
   const { users, isLoading, error, changeUserStatus } = useAdminUsers();
@@ -15,6 +16,7 @@ export const UserManagementTable = () => {
     return (
       <div
         style={{
+          // mala practica en los estilos
           backgroundColor: "#fee2e2",
           color: "#991b1b",
           padding: "1rem",
@@ -30,6 +32,7 @@ export const UserManagementTable = () => {
   return (
     <div
       style={{
+        // mala practica en los estilos
         padding: "2rem",
         maxWidth: "1000px",
         margin: "0 auto",
@@ -42,6 +45,7 @@ export const UserManagementTable = () => {
 
       <div
         style={{
+          // mala practica en los estilos
           overflowX: "auto",
           backgroundColor: "#ffffff",
           borderRadius: "8px",
@@ -51,6 +55,7 @@ export const UserManagementTable = () => {
       >
         <table
           style={{
+            // mala practica en los estilos
             width: "100%",
             borderCollapse: "collapse",
             textAlign: "left",
@@ -59,6 +64,7 @@ export const UserManagementTable = () => {
           <thead>
             <tr
               style={{
+                // mala practica en los estilos
                 backgroundColor: "#f9fafb",
                 borderBottom: "1px solid #e5e7eb",
               }}
@@ -108,6 +114,7 @@ export const UserManagementTable = () => {
                   <td style={{ padding: "0.75rem 1rem" }}>
                     <span
                       style={{
+                        // mala practica en los estilos
                         padding: "0.25rem 0.5rem",
                         borderRadius: "4px",
                         fontSize: "0.75rem",
